@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %><%= typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB' %> Admin</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js for Sales Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS Design System -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">
+          <i class="fas fa-tools"></i>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title"><%= typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB' %></span>
+          <span class="logo-subtitle">Admin & Billing</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main Menu</div>
+        <a href="/dashboard" class="nav-item <%= (typeof currentPage !== 'undefined' && currentPage === 'dashboard') ? 'active' : '' %>">
+          <i class="fas fa-th-large"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/products" class="nav-item <%= (typeof currentPage !== 'undefined' && currentPage === 'products') ? 'active' : '' %>">
+          <i class="fas fa-boxes-stacked"></i>
+          <span>Products Inventory</span>
+        </a>
+        <a href="/sales/new" class="nav-item <%= (typeof currentPage !== 'undefined' && currentPage === 'new-sale') ? 'active' : '' %>">
+          <i class="fas fa-cash-register"></i>
+          <span>New Sale / Billing</span>
+          <span class="nav-badge primary">POS</span>
+        </a>
+        <a href="/sales" class="nav-item <%= (typeof currentPage !== 'undefined' && currentPage === 'sales') ? 'active' : '' %>">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Sales & Bills</span>
+        </a>
+
+        <div class="nav-section-title" style="margin-top: 14px;">Analytics</div>
+        <a href="/reports/sales" class="nav-item <%= (typeof currentPage !== 'undefined' && currentPage === 'reports') ? 'active' : '' %>">
+          <i class="fas fa-chart-line"></i>
+          <span>Sales Report</span>
+        </a>
+
+        <div class="nav-section-title" style="margin-top: 14px;">Quick Actions</div>
+        <a href="/products/new" class="nav-item">
+          <i class="fas fa-plus-circle"></i>
+          <span>Add Product</span>
+        </a>
+        <a href="/products?status=low_stock" class="nav-item">
+          <i class="fas fa-triangle-exclamation" style="color: #dc2626;"></i>
+          <span style="color: #dc2626; font-weight: 600;">Low Stock Alerts</span>
+          <span class="nav-badge danger">&lt; 10</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="quick-stats-mini">
+          <div>
+            <div style="color: var(--text-dim); font-size: 11px;">Store Status</div>
+            <div style="font-weight: 700; color: #059669; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
+              Online / Active
+            </div>
+          </div>
+          <a href="/sales/new" class="btn btn-primary btn-sm" style="padding: 5px 10px; font-size: 11px;">
+            <i class="fas fa-plus"></i> Bill
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <!-- Top Sticky Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 class="page-title">
+            <%= typeof title !== 'undefined' ? title : (typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB') %>
+          </h1>
+        </div>
+
+        <div class="header-actions">
+          <div style="font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <i class="far fa-calendar-alt"></i>
+            <span id="currentDateDisplay"><%= new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+          </div>
+
+          <a href="/products/new" class="btn btn-outline btn-sm">
+            <i class="fas fa-plus"></i> Add Product
+          </a>
+
+          <a href="/sales/new" class="btn btn-primary btn-sm">
+            <i class="fas fa-cash-register"></i> Sell Product
+          </a>
+        </div>
+      </header>
+
+      <div class="content-body">
+        <!-- Flash Success / Error Messages -->
+        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+            <span><%= successMessage %></span>
+          </div>
+        <% } %>
+
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
+            <span><%= errorMessage %></span>
+          </div>
+        <% } %>

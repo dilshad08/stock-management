@@ -1,0 +1,603 @@
+<%- include('../layout/header') %>
+
+<div style="max-width: 1060px; margin: 0 auto; width: 100%;">
+  <!-- Top Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
+          Edit Bill & Process Item Returns
+        </h2>
+        <span class="badge" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 13px;">
+          <%= sale.invoiceNumber %>
+        </span>
+        <% if (sale.status === 'returned' || sale.refundAmount > 0) { %>
+          <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">
+            <i class="fas fa-rotate-left"></i> Previously Returned
+          </span>
+        <% } %>
+      </div>
+      <p style="color: var(--text-dim); font-size: 13px;">
+        Return items to restore inventory stock and adjust retained quantities on this bill.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <a href="/sales/<%= sale._id %>" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> View Bill
+      </a>
+      <a href="/sales" class="btn btn-outline">
+        <i class="fas fa-list"></i> All Sales
+      </a>
+    </div>
+  </div>
+
+  <!-- Clear Explanatory Guide Banner -->
+  <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px;">
+    <div style="width: 36px; height: 36px; border-radius: 8px; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; flex-shrink: 0; margin-top: 2px;">
+      <i class="fas fa-rotate-left"></i>
+    </div>
+    <div style="font-size: 13px; color: #1e40af; line-height: 1.5;">
+      <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">
+        How Item Returns & Inventory Restocking Work:
+      </div>
+      <div>
+        If a customer bought <strong>4 items</strong> and wants to return <strong>2 items</strong>, enter <strong>2</strong> in the <strong>Return Qty</strong> column. The system will automatically:
+      </div>
+      <div style="margin-top: 4px; display: flex; gap: 16px; flex-wrap: wrap;">
+        <span><i class="fas fa-check-circle" style="color: #059669;"></i> <strong>Add 2 items directly back</strong> to product inventory stock</span>
+        <span><i class="fas fa-check-circle" style="color: #059669;"></i> <strong>Retain 2 items</strong> on the updated bill</span>
+        <span><i class="fas fa-check-circle" style="color: #059669;"></i> Calculate the exact <strong>refund amount</strong> due to the customer</span>
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" action="/sales/<%= sale._id %>/edit" id="editSaleForm">
+    <!-- Hidden JSON items input for submission -->
+    <input type="hidden" name="items" id="editItemsJson" value="" />
+
+    <!-- 1. Customer & Bill Info Card -->
+    <div class="panel" style="margin-bottom: 24px;">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="fas fa-user-edit" style="color: var(--primary);"></i>
+          <span>Customer & Payment Information</span>
+        </div>
+        <span style="font-size: 12px; color: var(--text-dim);">
+          Original Bill Date: <%= new Date(sale.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+        </span>
+      </div>
+
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="customerName">Customer Name</label>
+            <input 
+              type="text" 
+              id="customerName" 
+              name="customerName" 
+              class="form-control" 
+              value="<%= sale.customerName %>" 
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="customerPhone">Customer Phone</label>
+            <input 
+              type="text" 
+              id="customerPhone" 
+              name="customerPhone" 
+              class="form-control" 
+              value="<%= sale.customerPhone || '' %>" 
+              placeholder="e.g. +91 98765 43210"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod" class="form-control">
+              <option value="Cash" <%= sale.paymentMethod === 'Cash' ? 'selected' : '' %>>Cash</option>
+              <option value="Card" <%= sale.paymentMethod === 'Card' ? 'selected' : '' %>>Card</option>
+              <option value="UPI" <%= sale.paymentMethod === 'UPI' ? 'selected' : '' %>>UPI / Digital</option>
+              <option value="Bank Transfer" <%= sale.paymentMethod === 'Bank Transfer' ? 'selected' : '' %>>Bank Transfer</option>
+              <option value="Credit" <%= sale.paymentMethod === 'Credit' ? 'selected' : '' %>>Credit / Store Khata</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="customerAddress">Customer Address (Optional)</label>
+          <input 
+            type="text" 
+            id="customerAddress" 
+            name="customerAddress" 
+            class="form-control" 
+            value="<%= sale.customerAddress || '' %>" 
+            placeholder="Street address or site delivery location"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Itemized Return & Quantity Adjustment Table -->
+    <div class="panel" style="margin-bottom: 24px;">
+      <div class="panel-header" style="justify-content: space-between;">
+        <div class="panel-title">
+          <i class="fas fa-boxes-stacked" style="color: var(--primary);"></i>
+          <span>Bill Items: Set Return Quantity or Kept Quantity</span>
+        </div>
+        <span class="badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-weight: 700;">
+          <i class="fas fa-warehouse"></i> Returned units automatically replenish inventory
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="custom-table" id="itemsTable">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>Product Details</th>
+              <th style="text-align: right;">Unit Price</th>
+              <th style="text-align: center;">Original Bought</th>
+              <th style="text-align: center; min-width: 140px; background: #fff1f2; color: #be123c;">
+                <i class="fas fa-rotate-left"></i> Return Qty
+              </th>
+              <th style="text-align: center; min-width: 140px; background: #f0fdf4; color: #15803d;">
+                <i class="fas fa-check"></i> Final Kept
+              </th>
+              <th style="text-align: center; min-width: 180px;">Inventory Restock</th>
+              <th style="text-align: right;">New Total</th>
+              <th style="text-align: center;">Quick Action</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody">
+            <% sale.items.forEach((item, index) => { %>
+              <% const origQty = item.originalQuantity || item.quantity; %>
+              <% const initialReturned = item.returnedQuantity || 0; %>
+              <tr class="item-row" data-id="<%= item.productId %>" data-price="<%= item.unitPrice %>" data-orig-qty="<%= origQty %>" data-unit="<%= item.unit %>">
+                <td style="color: var(--text-dim);"><%= index + 1 %></td>
+                <td>
+                  <div style="font-weight: 700; color: var(--text-main); font-size: 14px;"><%= item.productName %></div>
+                  <div style="font-size: 11px; color: var(--text-dim);">
+                    SKU: <code style="color: var(--primary);"><%= item.sku %></code>
+                  </div>
+                </td>
+                <td style="text-align: right; color: var(--text-muted); font-weight: 600;">
+                  ₹<%= item.unitPrice.toFixed(2) %>
+                </td>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 800; font-size: 14px;">
+                  <span class="orig-qty-display"><%= origQty %></span> <%= item.unit %>
+                </td>
+
+                <!-- Direct Return Quantity Stepper Input -->
+                <td style="text-align: center; background: #fff5f5;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <button type="button" class="btn btn-outline btn-sm btn-return-minus" style="width: 26px; height: 26px; padding: 0; color: #dc2626;" title="Decrease Return">-</button>
+                    <input 
+                      type="number" 
+                      class="form-control item-return-input" 
+                      min="0" 
+                      max="<%= origQty %>" 
+                      value="<%= initialReturned %>" 
+                      style="width: 55px; text-align: center; font-weight: 800; padding: 4px; color: #dc2626; border-color: #fca5a5; background: #ffffff;"
+                      title="Quantity being returned by customer"
+                    />
+                    <button type="button" class="btn btn-outline btn-sm btn-return-plus" style="width: 26px; height: 26px; padding: 0; color: #dc2626;" title="Increase Return">+</button>
+                  </div>
+                  <span style="font-size: 10px; color: #be123c; font-weight: 600;">to return</span>
+                </td>
+
+                <!-- Retained / Kept Quantity Stepper Input -->
+                <td style="text-align: center; background: #f6fef9;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <button type="button" class="btn btn-outline btn-sm btn-kept-minus" style="width: 26px; height: 26px; padding: 0;" title="Decrease Kept">-</button>
+                    <input 
+                      type="number" 
+                      class="form-control item-kept-input" 
+                      min="0" 
+                      max="<%= origQty + 100 %>" 
+                      value="<%= item.quantity %>" 
+                      style="width: 55px; text-align: center; font-weight: 800; padding: 4px; color: var(--text-main); background: #ffffff;"
+                      title="Quantity customer keeps on the bill"
+                    />
+                    <button type="button" class="btn btn-outline btn-sm btn-kept-plus" style="width: 26px; height: 26px; padding: 0;" title="Increase Kept">+</button>
+                  </div>
+                  <span style="font-size: 10px; color: #15803d; font-weight: 600;">remaining</span>
+                </td>
+
+                <!-- Live Inventory Stock Feedback Badge -->
+                <td style="text-align: center;">
+                  <span class="badge restock-badge" style="font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                    <!-- Updated dynamically via JS -->
+                    0 <%= item.unit %> returned
+                  </span>
+                </td>
+
+                <!-- Line Total -->
+                <td style="text-align: right; font-weight: 800; color: var(--text-main); font-size: 14px;" class="item-subtotal-cell">
+                  ₹<%= item.subtotal.toFixed(2) %>
+                </td>
+
+                <!-- Quick Action Buttons -->
+                <td style="text-align: center;">
+                  <div style="display: inline-flex; gap: 4px;">
+                    <button type="button" class="btn btn-outline btn-sm btn-action-return-all" title="Return all <%= origQty %> <%= item.unit %>" style="color: #dc2626; border-color: #fecaca; font-size: 10px; padding: 3px 6px;">
+                      Return All
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm btn-action-reset" title="Reset to 0 returned" style="color: var(--text-dim); border-color: #cbd5e1; font-size: 10px; padding: 3px 6px;">
+                      Reset
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. Financial Summary & Return Calculation -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+      <!-- Left: Return Notes & Reasons -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fas fa-clipboard-list" style="color: var(--primary);"></i>
+            <span>Return Remarks / Reason</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="notes">Notes / Reason for Return</label>
+            <textarea 
+              id="notes" 
+              name="notes" 
+              class="form-control" 
+              rows="4" 
+              placeholder="e.g. Customer returned 2 pcs due to wrong specification. Stock added back to inventory. Refund paid in cash."
+            ><%= sale.notes || '' %></textarea>
+          </div>
+
+          <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; font-size: 12px; color: var(--text-dim); line-height: 1.5;">
+            <div><strong style="color: var(--text-main);"><i class="fas fa-arrows-rotate"></i> Automatic Inventory Sync:</strong></div>
+            <div>Any returned quantity is <strong>immediately added back</strong> to the product's inventory stock. Total sales and revenue figures will adjust cleanly.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Financial Recalculation -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fas fa-calculator" style="color: var(--primary);"></i>
+            <span>Bill Totals & Refund Due</span>
+          </div>
+        </div>
+
+        <div class="panel-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Original Grand Total -->
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted);">
+            <span>Original Bill Grand Total:</span>
+            <span style="font-weight: 700; color: var(--text-main);">
+              ₹<%= (sale.originalGrandTotal || sale.grandTotal).toFixed(2) %>
+            </span>
+          </div>
+
+          <!-- Total Items Returned Counter -->
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #dc2626;">
+            <span>Total Units Returning to Stock:</span>
+            <span id="summaryTotalReturned" style="font-weight: 800;">
+              0 items
+            </span>
+          </div>
+
+          <!-- New Subtotal -->
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted);">
+            <span>Revised Items Subtotal:</span>
+            <span id="summarySubtotal" style="font-weight: 700; color: var(--text-main);">
+              ₹<%= sale.subtotal.toFixed(2) %>
+            </span>
+          </div>
+
+          <!-- Discount % Input -->
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+            <span style="color: #0284c7;">Bill Discount (%):</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <input 
+                type="number" 
+                id="discountPercentage" 
+                name="discountPercentage" 
+                class="form-control" 
+                min="0" 
+                max="100" 
+                step="0.5" 
+                value="<%= sale.discountPercentage || 0 %>" 
+                style="width: 75px; text-align: center; font-weight: 800; padding: 4px; color: #0284c7; border-color: #7dd3fc; background: #ffffff;"
+              />
+              <span style="font-weight: 700; color: #0284c7;">%</span>
+            </div>
+          </div>
+
+          <!-- Discount Amount -->
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #0284c7;">
+            <span>Discount Deduction:</span>
+            <span id="summaryDiscount" style="font-weight: 700;">-₹<%= (sale.discountAmount || 0).toFixed(2) %></span>
+          </div>
+
+          <!-- Divider -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; color: var(--text-main);">
+              <span>Revised Bill Total:</span>
+              <span id="summaryGrandTotal" style="color: var(--primary);">₹<%= sale.grandTotal.toFixed(2) %></span>
+            </div>
+          </div>
+
+          <!-- REFUND HIGHLIGHT BOX -->
+          <div id="refundBox" style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-sm); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 700; color: #059669; font-size: 15px;">
+              <i class="fas fa-hand-holding-dollar"></i> Refund Due to Customer:
+            </div>
+            <div id="refundAmountVal" style="font-size: 22px; font-weight: 800; color: #059669;">
+              ₹<%= (sale.refundAmount || 0).toFixed(2) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Form Action Buttons -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 14px;">
+      <div>
+        <button 
+          type="button" 
+          class="btn btn-outline" 
+          style="color: #dc2626; border-color: #fecaca;" 
+          onclick="if(confirm('Are you sure you want to void this entire sale? All products will be restored to inventory stock.')) { document.getElementById('voidSaleForm').submit(); }"
+        >
+          <i class="fas fa-trash-alt"></i> Void Entire Bill
+        </button>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <a href="/sales/<%= sale._id %>" class="btn btn-outline btn-lg">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg" style="font-weight: 700;">
+          <i class="fas fa-check-circle"></i> Save Changes & Restock Inventory
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Separate Hidden Void Form -->
+  <form id="voidSaleForm" method="POST" action="/sales/<%= sale._id %>/delete" style="display: none;"></form>
+  <input type="hidden" id="originalGrandTotalVal" value="<%= sale.originalGrandTotal || sale.grandTotal %>" />
+</div>
+
+<!-- Interactive Client Calculation Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const originalGrandTotal = parseFloat(document.getElementById('originalGrandTotalVal').value) || 0;
+    const discountInput = document.getElementById('discountPercentage');
+    const tableBody = document.getElementById('itemsTableBody');
+    const hiddenJson = document.getElementById('editItemsJson');
+    const subtotalEl = document.getElementById('summarySubtotal');
+    const discountEl = document.getElementById('summaryDiscount');
+    const grandTotalEl = document.getElementById('summaryGrandTotal');
+    const refundBox = document.getElementById('refundBox');
+    const refundAmountVal = document.getElementById('refundAmountVal');
+    const summaryTotalReturned = document.getElementById('summaryTotalReturned');
+    const editForm = document.getElementById('editSaleForm');
+
+    function recalculate() {
+      const rows = tableBody.querySelectorAll('.item-row');
+      let currentSubtotal = 0;
+      let totalUnitsReturned = 0;
+      const itemsPayload = [];
+
+      rows.forEach(row => {
+        const id = row.dataset.id;
+        const price = parseFloat(row.dataset.price) || 0;
+        const origQty = parseInt(row.dataset.origQty, 10) || 0;
+        const unit = row.dataset.unit || 'pcs';
+
+        const returnInput = row.querySelector('.item-return-input');
+        const keptInput = row.querySelector('.item-kept-input');
+
+        let keptQty = Math.max(0, parseInt(keptInput.value, 10) || 0);
+
+        // For regular items with return support
+        let returnQty = parseInt(returnInput.value, 10);
+        if (isNaN(returnQty) || returnQty < 0) returnQty = 0;
+        if (returnQty > origQty) returnQty = origQty;
+
+        totalUnitsReturned += returnQty;
+
+        const lineSubtotal = Math.round(price * keptQty * 100) / 100;
+        currentSubtotal += lineSubtotal;
+
+        // Update line total cell
+        const totalCell = row.querySelector('.item-subtotal-cell');
+        if (totalCell) totalCell.textContent = `₹${lineSubtotal.toFixed(2)}`;
+
+        // Update restock badge
+        const restockBadge = row.querySelector('.restock-badge');
+        if (restockBadge) {
+          if (returnQty > 0) {
+            restockBadge.innerHTML = `<i class="fas fa-arrow-turn-up"></i> +${returnQty} ${unit} added to inventory`;
+            restockBadge.style.background = '#ecfdf5';
+            restockBadge.style.color = '#059669';
+            restockBadge.style.border = '1px solid #a7f3d0';
+            restockBadge.style.display = 'inline-flex';
+          } else if (keptQty > origQty) {
+            const added = keptQty - origQty;
+            restockBadge.innerHTML = `<i class="fas fa-arrow-down"></i> -${added} ${unit} deducted from inventory`;
+            restockBadge.style.background = '#eff6ff';
+            restockBadge.style.color = '#1d4ed8';
+            restockBadge.style.border = '1px solid #bfdbfe';
+            restockBadge.style.display = 'inline-flex';
+          } else {
+            restockBadge.innerHTML = `No change (0 returned)`;
+            restockBadge.style.background = '#f8fafc';
+            restockBadge.style.color = '#64748b';
+            restockBadge.style.border = '1px solid #e2e8f0';
+            restockBadge.style.display = 'inline-flex';
+          }
+        }
+
+        itemsPayload.push({
+          productId: id,
+          quantity: keptQty,
+        });
+      });
+
+      hiddenJson.value = JSON.stringify(itemsPayload);
+
+      // Financial calculations
+      const discountPct = Math.max(0, Math.min(100, parseFloat(discountInput.value) || 0));
+      const discountAmount = Math.round(((currentSubtotal * discountPct) / 100) * 100) / 100;
+      const newGrandTotal = Math.round(Math.max(0, currentSubtotal - discountAmount) * 100) / 100;
+      const refundDue = Math.max(0, Math.round((originalGrandTotal - newGrandTotal) * 100) / 100);
+
+      subtotalEl.textContent = `₹${currentSubtotal.toFixed(2)}`;
+      discountEl.textContent = `-₹${discountAmount.toFixed(2)}`;
+      grandTotalEl.textContent = `₹${newGrandTotal.toFixed(2)}`;
+
+      if (summaryTotalReturned) {
+        summaryTotalReturned.textContent = `${totalUnitsReturned} item(s) restocked`;
+      }
+
+      if (refundDue > 0) {
+        refundBox.style.display = 'flex';
+        refundAmountVal.textContent = `₹${refundDue.toFixed(2)}`;
+      } else {
+        refundBox.style.display = 'none';
+      }
+    }
+
+    // Attach listeners to row steppers with two-way sync between Return and Kept
+    function attachRowEvents(row) {
+      const origQty = parseInt(row.dataset.origQty, 10) || 0;
+
+      const returnInput = row.querySelector('.item-return-input');
+      const keptInput = row.querySelector('.item-kept-input');
+
+      const btnReturnMinus = row.querySelector('.btn-return-minus');
+      const btnReturnPlus = row.querySelector('.btn-return-plus');
+      const btnKeptMinus = row.querySelector('.btn-kept-minus');
+      const btnKeptPlus = row.querySelector('.btn-kept-plus');
+      const btnReturnAll = row.querySelector('.btn-action-return-all');
+      const btnReset = row.querySelector('.btn-action-reset');
+
+      if (returnInput && keptInput) {
+        // Return input changed directly -> sync Kept input
+        returnInput.addEventListener('input', () => {
+          let ret = parseInt(returnInput.value, 10);
+          if (isNaN(ret) || ret < 0) ret = 0;
+          if (ret > origQty) ret = origQty;
+          returnInput.value = ret;
+          keptInput.value = Math.max(0, origQty - ret);
+          recalculate();
+        });
+
+        // Kept input changed directly -> sync Return input
+        keptInput.addEventListener('input', () => {
+          let kept = parseInt(keptInput.value, 10);
+          if (isNaN(kept) || kept < 0) kept = 0;
+          keptInput.value = kept;
+          if (kept <= origQty) {
+            returnInput.value = origQty - kept;
+          } else {
+            returnInput.value = 0;
+          }
+          recalculate();
+        });
+
+        // Return Steppers
+        if (btnReturnMinus) {
+          btnReturnMinus.addEventListener('click', () => {
+            let ret = parseInt(returnInput.value, 10) || 0;
+            if (ret > 0) {
+              returnInput.value = ret - 1;
+              keptInput.value = origQty - (ret - 1);
+              recalculate();
+            }
+          });
+        }
+
+        if (btnReturnPlus) {
+          btnReturnPlus.addEventListener('click', () => {
+            let ret = parseInt(returnInput.value, 10) || 0;
+            if (ret < origQty) {
+              returnInput.value = ret + 1;
+              keptInput.value = origQty - (ret + 1);
+              recalculate();
+            }
+          });
+        }
+
+        // Kept Steppers
+        if (btnKeptMinus) {
+          btnKeptMinus.addEventListener('click', () => {
+            let kept = parseInt(keptInput.value, 10) || 0;
+            if (kept > 0) {
+              keptInput.value = kept - 1;
+              if (kept - 1 <= origQty) {
+                returnInput.value = origQty - (kept - 1);
+              }
+              recalculate();
+            }
+          });
+        }
+
+        if (btnKeptPlus) {
+          btnKeptPlus.addEventListener('click', () => {
+            let kept = parseInt(keptInput.value, 10) || 0;
+            keptInput.value = kept + 1;
+            if (kept + 1 <= origQty) {
+              returnInput.value = origQty - (kept + 1);
+            } else {
+              returnInput.value = 0;
+            }
+            recalculate();
+          });
+        }
+
+        // Quick Return All: returns all items, kept = 0
+        if (btnReturnAll) {
+          btnReturnAll.addEventListener('click', () => {
+            returnInput.value = origQty;
+            keptInput.value = 0;
+            recalculate();
+          });
+        }
+
+        // Quick Reset: return = 0, kept = origQty
+        if (btnReset) {
+          btnReset.addEventListener('click', () => {
+            returnInput.value = 0;
+            keptInput.value = origQty;
+            recalculate();
+          });
+        }
+      }
+    }
+
+    document.querySelectorAll('.item-row').forEach(attachRowEvents);
+
+    if (discountInput) {
+      discountInput.addEventListener('input', recalculate);
+    }
+
+    // Ensure recalculate is run right before form submission
+    if (editForm) {
+      editForm.addEventListener('submit', (e) => {
+        recalculate();
+      });
+    }
+
+    // Initial calculation on load
+    recalculate();
+  });
+</script>
+
+<%- include('../layout/footer') %>

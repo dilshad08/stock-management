@@ -1,0 +1,331 @@
+<%- include('../layout/header') %>
+
+<!-- Top Filter & Export Bar -->
+<div class="panel" style="margin-bottom: 24px;">
+  <div class="panel-body" style="padding: 18px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--text-main);">Product-Wise Sales & Revenue Report</h2>
+        <p style="color: var(--text-dim); font-size: 13px;">Detailed breakdown of units sold, revenue generated, and remaining stock for each hardware product.</p>
+      </div>
+
+      <!-- Date Range Filter Tabs -->
+      <div class="filter-group">
+        <a href="/reports/sales?dateRange=all" class="filter-tab <%= dateRange === 'all' ? 'active' : '' %>">
+          All Time
+        </a>
+        <a href="/reports/sales?dateRange=today" class="filter-tab <%= dateRange === 'today' ? 'active' : '' %>">
+          Today
+        </a>
+        <a href="/reports/sales?dateRange=week" class="filter-tab <%= dateRange === 'week' ? 'active' : '' %>">
+          Last 7 Days
+        </a>
+        <a href="/reports/sales?dateRange=month" class="filter-tab <%= dateRange === 'month' ? 'active' : '' %>">
+          This Month
+        </a>
+        <button type="button" class="btn btn-outline btn-sm" onclick="window.print()">
+          <i class="fas fa-print"></i> Print Report
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Summary Cards -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <!-- Total Units Sold -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Total Units Sold</span>
+      <div class="stat-icon icon-blue"><i class="fas fa-cart-shopping"></i></div>
+    </div>
+    <div class="stat-value" style="color: var(--primary);"><%= summary.totalUnitsSold %></div>
+    <div class="stat-footer">
+      <span>Combined hardware items sold</span>
+    </div>
+  </div>
+
+  <!-- Total Product Revenue -->
+  <div class="stat-card card-success">
+    <div class="stat-header">
+      <span class="stat-title">Total Sales Revenue</span>
+      <div class="stat-icon icon-emerald"><i class="fas fa-indian-rupee-sign"></i></div>
+    </div>
+    <div class="stat-value" style="color: #059669;">₹<%= summary.totalProductRevenue.toFixed(2) %></div>
+    <div class="stat-footer">
+      <span>Gross product sales value</span>
+    </div>
+  </div>
+
+  <!-- Total Invoices / Orders -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Transactions Count</span>
+      <div class="stat-icon icon-purple"><i class="fas fa-receipt"></i></div>
+    </div>
+    <div class="stat-value" style="color: #7c3aed;"><%= summary.invoiceCount %></div>
+    <div class="stat-footer">
+      <span>Completed customer bills</span>
+    </div>
+  </div>
+
+  <!-- Total Discounts -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Discounts Given</span>
+      <div class="stat-icon icon-cyan"><i class="fas fa-tags"></i></div>
+    </div>
+    <div class="stat-value" style="color: #0284c7;">₹<%= summary.totalDiscount.toFixed(2) %></div>
+    <div class="stat-footer">
+      <span>Total discounts allowed</span>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Charts Section -->
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 24px;">
+  <!-- Bar Chart: Top Sold Products -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fas fa-chart-column" style="color: var(--primary);"></i>
+        <span>Top Selling Products by Units Sold</span>
+      </div>
+    </div>
+    <div class="panel-body" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="topProductsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Doughnut Chart: Revenue Share -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fas fa-chart-pie" style="color: #059669;"></i>
+        <span>Revenue Contribution</span>
+      </div>
+    </div>
+    <div class="panel-body" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <canvas id="revenueShareChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Product-Wise Sales Table (CRITICAL REQUIREMENT) -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fas fa-table-list"></i>
+      <span>Product-Wise Sales & Amount Breakdown</span>
+      <span class="badge" style="background: #f1f5f9; color: #475569;"><%= productSales.length %> products sold</span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Product Name & SKU</th>
+          <th>Category</th>
+          <!-- USER REQUIREMENT: HOW MANY PRODUCT ARE SOLD -->
+          <th style="color: var(--primary); font-weight: 700;">Units Sold</th>
+          <th>Avg Unit Price</th>
+          <!-- USER REQUIREMENT: TOTAL AMOUNT FOR EACH PRODUCT -->
+          <th style="color: #059669; font-weight: 700;">Total Revenue</th>
+          <th>Current Stock Left</th>
+          <th>Revenue Share</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (productSales && productSales.length > 0) { %>
+          <% productSales.forEach((p, index) => { %>
+            <% const sharePercent = summary.totalProductRevenue > 0 ? ((p.totalAmount / summary.totalProductRevenue) * 100).toFixed(1) : 0; %>
+            <% const isLow = p.currentStock < 10; %>
+            <tr class="<%= isLow ? 'row-low-stock' : '' %>">
+              <td style="color: var(--text-dim);"><%= index + 1 %></td>
+              <td>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 14px;"><%= p.productName %></div>
+                <div style="font-size: 11px; color: var(--text-dim);">
+                  SKU: <code style="color: var(--primary);"><%= p.sku %></code>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-category"><%= p.category %></span>
+              </td>
+
+              <!-- How many product are sold -->
+              <td>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">
+                  <%= p.totalUnitsSold %> <span style="font-size: 12px; font-weight: 500; color: var(--text-dim);"><%= p.unit %></span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-dim);"><%= p.orderCount %> <%= p.orderCount === 1 ? 'sale' : 'sales' %></div>
+              </td>
+
+              <td>
+                <div style="font-weight: 600; color: var(--text-muted);">₹<%= p.avgUnitPrice.toFixed(2) %></div>
+              </td>
+
+              <!-- Total amount for each product -->
+              <td>
+                <div style="font-size: 16px; font-weight: 800; color: #059669;">
+                  ₹<%= p.totalAmount.toFixed(2) %>
+                </div>
+              </td>
+
+              <!-- Current stock left with red alert if < 10 -->
+              <td>
+                <% if (p.currentStock <= 0) { %>
+                  <span class="badge badge-sold-out">
+                    <i class="fas fa-ban"></i> 0 <%= p.unit %> (Sold Out)
+                  </span>
+                <% } else if (p.currentStock < 10) { %>
+                  <!-- RED COLOR FOR QUANTITY < 10 -->
+                  <div class="quantity-text-red">
+                    <i class="fas fa-triangle-exclamation" style="color: #dc2626;"></i>
+                    <span><%= p.currentStock %> <%= p.unit %></span>
+                  </div>
+                  <span class="badge badge-low-stock" style="font-size: 10px; padding: 1px 6px; margin-top: 2px;">
+                    Low Stock (&lt; 10)
+                  </span>
+                <% } else { %>
+                  <span class="quantity-text-normal">
+                    <%= p.currentStock %> <%= p.unit %>
+                  </span>
+                <% } %>
+              </td>
+
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="revenue-progress-track">
+                    <div class="revenue-progress-fill" data-width="<%= sharePercent %>"></div>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 700; color: var(--text-main);"><%= sharePercent %>%</span>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 48px; color: var(--text-dim);">
+              <i class="fas fa-chart-simple" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
+              No sales recorded for the selected date range.
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Sales Data payload for Chart.js -->
+<script type="application/json" id="productSalesData">
+  <%- JSON.stringify(productSales || []) %>
+</script>
+
+<!-- Chart.js Script to initialize analytics graphs -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Set widths for revenue progress bars safely
+    document.querySelectorAll('.revenue-progress-fill').forEach((bar) => {
+      bar.style.width = (bar.getAttribute('data-width') || '0') + '%';
+    });
+
+    const dataEl = document.getElementById('productSalesData');
+    const rawData = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+    if (!rawData || rawData.length === 0) return;
+
+    // Top 6 products for charts
+    const topItems = rawData.slice(0, 6);
+    const labels = topItems.map(item => item.productName.length > 18 ? item.productName.slice(0, 18) + '...' : item.productName);
+    const unitsData = topItems.map(item => item.totalUnitsSold);
+    const revenueData = topItems.map(item => item.totalAmount);
+
+    // 1. Bar Chart: Units Sold
+    const ctxBar = document.getElementById('topProductsChart');
+    if (ctxBar) {
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Units Sold',
+            data: unitsData,
+            backgroundColor: 'rgba(79, 70, 229, 0.85)',
+            borderColor: '#4f46e5',
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              titleColor: '#ffffff',
+              bodyColor: '#38bdf8',
+              borderColor: '#e2e8f0',
+              borderWidth: 1,
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#64748b', font: { size: 11 } },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#64748b' },
+              grid: { color: '#f1f5f9' }
+            }
+          }
+        }
+      });
+    }
+
+    // 2. Doughnut Chart: Revenue Share
+    const ctxPie = document.getElementById('revenueShareChart');
+    if (ctxPie) {
+      new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: revenueData,
+            backgroundColor: [
+              '#4f46e5',
+              '#06b6d4',
+              '#10b981',
+              '#0ea5e9',
+              '#ec4899',
+              '#8b5cf6'
+            ],
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#475569', boxWidth: 12, font: { size: 10 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ₹${context.raw.toFixed(2)}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<%- include('../layout/footer') %>

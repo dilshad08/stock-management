@@ -1,0 +1,298 @@
+<%- include('../layout/header') %>
+
+<!-- Inventory Overview Metric Header -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+  <!-- Total Items in Catalog -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Catalog Size</span>
+      <div class="stat-icon icon-blue"><i class="fas fa-boxes-stacked"></i></div>
+    </div>
+    <div class="stat-value"><%= stats.totalProducts %></div>
+    <div class="stat-footer">
+      <span><%= stats.totalQuantity %> total units available</span>
+    </div>
+  </div>
+
+  <!-- In Stock Products -->
+  <div class="stat-card card-success">
+    <div class="stat-header">
+      <span class="stat-title">In Stock</span>
+      <div class="stat-icon icon-emerald"><i class="fas fa-check-circle"></i></div>
+    </div>
+    <div class="stat-value" style="color: #34d399;"><%= stats.inStockCount %></div>
+    <div class="stat-footer">
+      <span class="badge badge-in-stock">&ge; 10 Units</span>
+    </div>
+  </div>
+
+  <!-- Low Stock Alert (< 10) - CRITICAL REQUIREMENT HIGHLIGHTED IN RED -->
+  <div class="stat-card card-danger">
+    <div class="stat-header">
+      <span class="stat-title" style="color: #f87171;">Low Stock (&lt; 10 Units)</span>
+      <div class="stat-icon icon-red"><i class="fas fa-triangle-exclamation"></i></div>
+    </div>
+    <div class="stat-value red-value"><%= stats.lowStockCount %></div>
+    <div class="stat-footer">
+      <span class="badge badge-low-stock">&lt; 10 Critical</span>
+      <span style="color: #fca5a5;">Requires Reorder</span>
+    </div>
+  </div>
+
+  <!-- Sold Out -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span class="stat-title">Sold Out</span>
+      <div class="stat-icon icon-slate"><i class="fas fa-ban"></i></div>
+    </div>
+    <div class="stat-value" style="color: #94a3b8;"><%= stats.soldOutCount %></div>
+    <div class="stat-footer">
+      <span class="badge badge-sold-out">0 in inventory</span>
+    </div>
+  </div>
+</div>
+
+<!-- Products Management Panel -->
+<div class="panel">
+  <div class="panel-header">
+    <div class="panel-title">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Products Inventory Table</span>
+      <span class="badge" style="background: #f1f5f9; color: #475569;">
+        <%= typeof pagination !== 'undefined' ? pagination.totalCount : products.length %> total
+      </span>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <a href="/products/new" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Product
+      </a>
+      <a href="/sales/new" class="btn btn-success">
+        <i class="fas fa-cash-register"></i> Sell Product
+      </a>
+    </div>
+  </div>
+
+  <div class="panel-body" style="padding-bottom: 0;">
+    <!-- Filter Bar -->
+    <form method="GET" action="/products" class="filter-bar">
+      <!-- Search input -->
+      <div style="display: flex; gap: 8px; flex: 1; max-width: 360px;">
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control" 
+          placeholder="Search product name, SKU, category..." 
+          value="<%= currentFilter.search %>"
+        />
+        <button type="submit" class="btn btn-outline" style="padding: 0 16px;">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-group">
+        <label style="font-size: 13px; color: var(--text-dim);">Category:</label>
+        <select name="category" class="form-control" style="width: auto; padding: 8px 14px;" onchange="this.form.submit()">
+          <option value="all">All Categories</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= currentFilter.category === cat ? 'selected' : '' %>>
+              <%= cat %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <!-- Stock Status Filter Tabs -->
+      <div class="filter-group">
+        <a href="/products?category=<%= currentFilter.category %>&search=<%= currentFilter.search %>&status=all" 
+           class="filter-tab <%= currentFilter.status === 'all' ? 'active' : '' %>">
+          All (<%= stats.totalProducts %>)
+        </a>
+        <a href="/products?category=<%= currentFilter.category %>&search=<%= currentFilter.search %>&status=in_stock" 
+           class="filter-tab <%= currentFilter.status === 'in_stock' ? 'active' : '' %>">
+          In Stock (<%= stats.inStockCount %>)
+        </a>
+        <!-- LOW STOCK RED FILTER TAB -->
+        <a href="/products?category=<%= currentFilter.category %>&search=<%= currentFilter.search %>&status=low_stock" 
+           class="filter-tab tab-low-stock <%= currentFilter.status === 'low_stock' ? 'active-danger' : '' %>">
+          <i class="fas fa-triangle-exclamation"></i> Low Stock &lt; 10 (<%= stats.lowStockCount %>)
+        </a>
+        <a href="/products?category=<%= currentFilter.category %>&search=<%= currentFilter.search %>&status=sold_out" 
+           class="filter-tab <%= currentFilter.status === 'sold_out' ? 'active' : '' %>">
+          Sold Out (<%= stats.soldOutCount %>)
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Products Table -->
+  <div class="table-responsive">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Product Details</th>
+          <th>Category</th>
+          <th style="color: var(--text-muted);">Cost Price</th>
+          <th style="color: var(--primary);">Selling Price</th>
+          <!-- MANDATORY HIGHLIGHT: QUANTITY COLUMN -->
+          <th style="min-width: 130px;">Stock Quantity</th>
+          <th>Status</th>
+          <th>Total Sold</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (products && products.length > 0) { %>
+          <% products.forEach(product => { %>
+            <% const isLow = product.quantity < 10; %>
+            <tr class="<%= isLow ? 'row-low-stock' : '' %>">
+              <td>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 14px;">
+                  <%= product.name %>
+                </div>
+                <div style="font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;">
+                  <span>SKU: <code style="color: var(--primary); font-family: var(--font-mono);"><%= product.sku %></code></span>
+                  <% if (product.description) { %>
+                    <span>• <%= product.description.slice(0, 35) %><%= product.description.length > 35 ? '...' : '' %></span>
+                  <% } %>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge badge-category"><%= product.category %></span>
+              </td>
+
+              <!-- Cost Price Column -->
+              <td>
+                <div style="font-weight: 700; color: var(--text-muted); font-size: 14px;">
+                  ₹<%= (product.costPrice || 0).toFixed(2) %>
+                </div>
+                <div style="font-size: 11px; color: var(--text-dim);">Purchase</div>
+              </td>
+
+              <!-- Selling Price Column -->
+              <td>
+                <div style="font-weight: 800; color: var(--text-main); font-size: 14px;">
+                  ₹<%= product.unitPrice.toFixed(2) %>
+                </div>
+                <% const margin = product.unitPrice - (product.costPrice || 0); %>
+                <% const marginPercent = (product.costPrice && product.costPrice > 0) ? ((margin / product.costPrice) * 100).toFixed(0) : null; %>
+                <% if (marginPercent !== null && marginPercent >= 0) { %>
+                  <div style="font-size: 11px; color: #059669; font-weight: 600;">
+                    +<%= marginPercent %>% margin
+                  </div>
+                <% } else { %>
+                  <div style="font-size: 11px; color: var(--text-dim);">Retail</div>
+                <% } %>
+              </td>
+
+              <!-- CRITICAL USER REQUIREMENT:
+                   "any product which has quantity less than 10 will show in red color" -->
+              <td>
+                <% if (product.quantity < 10) { %>
+                  <!-- RED COLOR TEXT AND ICON FOR QUANTITY LESS THAN 10 -->
+                  <div class="quantity-text-red">
+                    <i class="fas fa-exclamation-circle" style="color: #dc2626;"></i>
+                    <span><%= product.quantity %> <%= product.unit %></span>
+                  </div>
+                  <div style="font-size: 11px; color: #dc2626; font-weight: 600;">
+                    Low Stock Alert!
+                  </div>
+                <% } else { %>
+                  <div class="quantity-text-normal">
+                    <span><%= product.quantity %> <%= product.unit %></span>
+                  </div>
+                <% } %>
+              </td>
+
+              <td>
+                <% if (product.quantity <= 0) { %>
+                  <span class="badge badge-sold-out">
+                    <i class="fas fa-ban"></i> Sold Out
+                  </span>
+                <% } else if (product.quantity < 10) { %>
+                  <!-- RED BADGE FOR QUANTITY < 10 -->
+                  <span class="badge badge-low-stock">
+                    <i class="fas fa-triangle-exclamation"></i> Low Stock (&lt; 10)
+                  </span>
+                <% } else { %>
+                  <span class="badge badge-in-stock">
+                    <i class="fas fa-check"></i> In Stock
+                  </span>
+                <% } %>
+              </td>
+
+              <td>
+                <div style="font-weight: 700; color: var(--text-main);">
+                  <%= product.totalSold || 0 %> <%= product.unit %>
+                </div>
+                <div style="font-size: 11px; color: var(--text-dim);">
+                  Rev: ₹<%= (product.totalRevenue || 0).toFixed(2) %>
+                </div>
+              </td>
+
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 6px;">
+                  <!-- Sell Shortcut -->
+                  <% if (product.quantity > 0) { %>
+                    <a href="/sales/new?product=<%= product._id %>" class="btn btn-primary btn-sm" title="Sell this product">
+                      <i class="fas fa-cart-plus"></i> Sell
+                    </a>
+                  <% } else { %>
+                    <button class="btn btn-outline btn-sm" disabled style="opacity: 0.5;">
+                      Sold Out
+                    </button>
+                  <% } %>
+
+                  <!-- Quick Restock Button -->
+                  <button type="button" 
+                          class="btn btn-outline btn-sm btn-open-restock" 
+                          data-id="<%= product._id %>" 
+                          data-name="<%= product.name %>" 
+                          data-stock="<%= product.quantity %>"
+                          title="Restock Inventory">
+                    <i class="fas fa-plus"></i> Restock
+                  </button>
+
+                  <!-- Edit -->
+                  <a href="/products/<%= product._id %>/edit" class="btn btn-outline btn-sm" title="Edit Product">
+                    <i class="fas fa-edit"></i>
+                  </a>
+
+                  <!-- Delete -->
+                  <form method="POST" action="/products/<%= product._id %>/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete <%= product.name %>? This cannot be undone.')">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171;" title="Delete Product">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 48px; color: var(--text-dim);">
+              <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
+              No products match your search or filter criteria.
+              <div style="margin-top: 12px;">
+                <a href="/products" class="btn btn-outline btn-sm">Clear Filters</a>
+                <a href="/products/new" class="btn btn-primary btn-sm">Add New Product</a>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Component -->
+  <%- include('../layout/pagination', {
+    pagination: pagination,
+    baseUrl: '/products',
+    queryParams: currentFilter,
+    itemName: 'products'
+  }) %>
+</div>
+
+<%- include('../layout/footer') %>

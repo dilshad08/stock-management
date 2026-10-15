@@ -1,0 +1,91 @@
+<%# Reusable Pagination Partial %>
+<%
+  const p = typeof pagination !== 'undefined' ? pagination : null;
+  if (p && p.totalCount !== undefined) {
+    const page = p.page || 1;
+    const limit = p.limit || 10;
+    const totalCount = p.totalCount || 0;
+    const totalPages = p.totalPages || 1;
+    const startItem = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+    const endItem = Math.min(page * limit, totalCount);
+    const itemLabel = typeof itemName !== 'undefined' ? itemName : 'entries';
+
+    function buildUrl(targetPage) {
+      const params = new URLSearchParams();
+      if (typeof queryParams === 'object' && queryParams !== null) {
+        for (const [key, val] of Object.entries(queryParams)) {
+          if (val !== undefined && val !== null && String(val).trim() !== '' && val !== 'all') {
+            params.set(key, String(val));
+          }
+        }
+      }
+      params.set('page', String(targetPage));
+      if (limit !== 10) {
+        params.set('limit', String(limit));
+      }
+      const queryStr = params.toString();
+      return (typeof baseUrl !== 'undefined' ? baseUrl : '') + (queryStr ? '?' + queryStr : '');
+    }
+
+    // Compute visible page numbers with clean ellipsis
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(2, page - delta); i <= Math.min(totalPages - 1, page + delta); i++) {
+      range.push(i);
+    }
+    if (page - delta > 2) {
+      range.unshift('...');
+    }
+    if (page + delta < totalPages - 1) {
+      range.push('...');
+    }
+    range.unshift(1);
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+%>
+<div class="pagination-container">
+  <div class="pagination-info">
+    Showing <strong><%= startItem %></strong> to <strong><%= endItem %></strong> of <strong><%= totalCount %></strong> <%= itemLabel %>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <nav class="pagination-nav" aria-label="Pagination">
+      <!-- Previous Page -->
+      <% if (p.hasPrev) { %>
+        <a href="<%= buildUrl(p.prevPage) %>" class="pagination-btn" title="Go to previous page">
+          <i class="fas fa-chevron-left"></i> Previous
+        </a>
+      <% } else { %>
+        <span class="pagination-btn pagination-disabled" aria-disabled="true">
+          <i class="fas fa-chevron-left"></i> Previous
+        </span>
+      <% } %>
+
+      <!-- Page Numbers -->
+      <div class="pagination-numbers">
+        <% range.forEach(num => { %>
+          <% if (num === '...') { %>
+            <span class="pagination-ellipsis">&hellip;</span>
+          <% } else if (num === page) { %>
+            <span class="pagination-number active" aria-current="page"><%= num %></span>
+          <% } else { %>
+            <a href="<%= buildUrl(num) %>" class="pagination-number"><%= num %></a>
+          <% } %>
+        <% }); %>
+      </div>
+
+      <!-- Next Page -->
+      <% if (p.hasNext) { %>
+        <a href="<%= buildUrl(p.nextPage) %>" class="pagination-btn" title="Go to next page">
+          Next <i class="fas fa-chevron-right"></i>
+        </a>
+      <% } else { %>
+        <span class="pagination-btn pagination-disabled" aria-disabled="true">
+          Next <i class="fas fa-chevron-right"></i>
+        </span>
+      <% } %>
+    </nav>
+  <% } %>
+</div>
+<% } %>

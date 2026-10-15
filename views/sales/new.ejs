@@ -1,0 +1,217 @@
+<%- include('../layout/header') %>
+
+<div class="pos-container">
+  
+  <!-- Left Column: Product Selection & Catalog Picker -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fas fa-boxes-stacked"></i>
+        <span>Select Products to Sell</span>
+      </div>
+      
+      <!-- Live Search Filter -->
+      <div style="flex: 1; max-width: 280px;">
+        <input 
+          type="text" 
+          id="posProductSearch" 
+          class="form-control" 
+          placeholder="Filter products..."
+          style="padding: 8px 12px; font-size: 13px;"
+        />
+      </div>
+    </div>
+
+    <div class="panel-body" style="max-height: 640px; overflow-y: auto; padding: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px;">
+        <% if (products && products.length > 0) { %>
+          <% products.forEach(prod => { %>
+            <% const isSoldOut = prod.quantity <= 0; %>
+            <div 
+              class="pos-product-item product-picker-card <%= isSoldOut ? 'sold-out' : '' %>"
+              data-id="<%= prod._id %>"
+              data-name="<%= prod.name %>"
+              data-sku="<%= prod.sku %>"
+              data-category="<%= prod.category %>"
+              data-price="<%= prod.unitPrice %>"
+              data-stock="<%= prod.quantity %>"
+              data-unit="<%= prod.unit %>"
+            >
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                <span class="badge badge-category" style="font-size: 10px; padding: 2px 6px;">
+                  <%= prod.category %>
+                </span>
+                
+                <!-- Stock status badge -->
+                <% if (prod.quantity <= 0) { %>
+                  <span class="badge badge-sold-out" style="font-size: 10px; padding: 2px 6px;">
+                    Sold Out
+                  </span>
+                <% } else if (prod.quantity < 10) { %>
+                  <!-- RED BADGE FOR QUANTITY < 10 -->
+                  <span class="badge badge-low-stock" style="font-size: 10px; padding: 2px 6px;">
+                    <i class="fas fa-exclamation-triangle"></i> <%= prod.quantity %> <%= prod.unit %>
+                  </span>
+                <% } else { %>
+                  <span class="badge badge-in-stock" style="font-size: 10px; padding: 2px 6px;">
+                    <%= prod.quantity %> <%= prod.unit %>
+                  </span>
+                <% } %>
+              </div>
+
+              <div style="font-weight: 700; font-size: 14px; color: var(--text-main); line-height: 1.3;">
+                <%= prod.name %>
+              </div>
+
+              <div style="font-size: 11px; color: var(--text-dim);">
+                SKU: <%= prod.sku %>
+              </div>
+
+              <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                <span style="font-size: 17px; font-weight: 800; color: var(--primary);">
+                  ₹<%= prod.unitPrice.toFixed(2) %>
+                </span>
+                <button type="button" class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 11px;" <%= isSoldOut ? 'disabled' : '' %>>
+                  <i class="fas fa-plus"></i> Add
+                </button>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--text-dim);">
+            No products found. Please add products to your inventory first.
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Current Sale Cart & Discount Calculation -->
+  <div class="panel">
+    <div class="panel-header" style="background: #eef2ff;">
+      <div class="panel-title">
+        <i class="fas fa-cart-shopping" style="color: var(--primary);"></i>
+        <span>Billing Cart</span>
+      </div>
+      <span class="badge badge-primary">Invoice Counter</span>
+    </div>
+
+    <form method="POST" action="/sales" id="posBillingForm" class="panel-body">
+      <!-- Hidden input containing stringified JSON of items -->
+      <input type="hidden" name="items" id="hiddenItemsJson" value="[]" />
+
+      <!-- Customer Information Fields -->
+      <div style="background: var(--bg-body); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px;">
+          Customer & Payment Details
+        </div>
+        <div class="form-row" style="gap: 12px;">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 12px;">Customer Name</label>
+            <input type="text" name="customerName" class="form-control" placeholder="Walk-in Customer" style="padding: 8px 12px;" />
+          </div>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 12px;">Contact Phone</label>
+            <input type="text" name="customerPhone" class="form-control" placeholder="Optional phone #" style="padding: 8px 12px;" />
+          </div>
+        </div>
+
+        <div class="form-row" style="gap: 12px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Payment Method</label>
+            <select name="paymentMethod" class="form-control" style="padding: 8px 12px;">
+              <option value="Cash">Cash</option>
+              <option value="Card">Credit / Debit Card</option>
+              <option value="UPI">UPI / Digital QR</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Credit">Store Credit / Khata</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 12px;">Customer Address</label>
+            <input type="text" name="customerAddress" class="form-control" placeholder="Optional site/street" style="padding: 8px 12px;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Items Section -->
+      <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between;">
+        <span>Selected Items</span>
+        <span style="font-size: 11px; color: var(--text-dim);">Adjust qty or remove</span>
+      </div>
+
+      <div id="emptyCartNotice" style="text-align: center; padding: 36px 16px; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-dim); margin-bottom: 16px;">
+        <i class="fas fa-cart-arrow-down" style="font-size: 32px; margin-bottom: 8px; display: block; opacity: 0.6;"></i>
+        Cart is empty. Click on any product on the left to add it to the bill.
+      </div>
+
+      <div id="cartItemsList" style="max-height: 240px; overflow-y: auto; margin-bottom: 16px;">
+        <!-- Dynamically injected via public/js/main.js -->
+      </div>
+
+      <!-- CRITICAL USER REQUIREMENT:
+           "while selling product I want an option for discount percentage on total amount" -->
+      <div class="discount-box">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="posDiscountPercent" style="font-size: 13px; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-tags"></i> Discount on Total Amount (%):
+          </label>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input 
+              type="number" 
+              id="posDiscountPercent" 
+              name="discountPercentage" 
+              class="form-control" 
+              min="0" 
+              max="100" 
+              step="1" 
+              value="0" 
+              style="width: 80px; text-align: center; font-weight: 800; font-size: 16px; color: #0284c7; border-color: #7dd3fc; background: #ffffff;"
+            />
+            <span style="font-weight: 700; color: #0284c7;">%</span>
+          </div>
+        </div>
+
+        <!-- Quick Preset Discount Buttons -->
+        <div class="discount-presets">
+          <button type="button" class="discount-preset-btn discount-btn active" data-percent="0">0%</button>
+          <button type="button" class="discount-preset-btn discount-btn" data-percent="5">5% OFF</button>
+          <button type="button" class="discount-preset-btn discount-btn" data-percent="10">10% OFF</button>
+          <button type="button" class="discount-preset-btn discount-btn" data-percent="15">15% OFF</button>
+          <button type="button" class="discount-preset-btn discount-btn" data-percent="20">20% OFF</button>
+        </div>
+      </div>
+
+      <!-- Financial Totals Summary Breakdown -->
+      <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--text-muted);">
+          <span>Subtotal:</span>
+          <span id="posSubtotal" style="font-weight: 700; color: var(--text-main);">₹0.00</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #dc2626;">
+          <span>Discount Amount:</span>
+          <span id="posDiscountAmount" style="font-weight: 700;">-₹0.00</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 20px; font-weight: 800; color: var(--text-main);">
+          <span>Net Total Payable:</span>
+          <span id="posGrandTotal" style="color: var(--primary);">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Optional Sale Notes -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <input type="text" name="notes" class="form-control" placeholder="Invoice notes or delivery remarks (optional)" style="font-size: 13px;" />
+      </div>
+
+      <!-- Checkout Button -->
+      <button type="submit" id="btnSubmitSale" class="btn btn-success btn-lg" style="width: 100%; font-size: 17px;" disabled>
+        <i class="fas fa-check-circle"></i> Complete Sale & Generate Bill
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<%- include('../layout/footer') %>
