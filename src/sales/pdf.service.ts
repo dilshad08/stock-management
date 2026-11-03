@@ -31,9 +31,8 @@ export class PdfService {
       .font('Helvetica')
       .fillColor(textGray)
       .text('Tools, Building Materials & Industrial Supplies', 40, 62)
-      .text('124 Industrial Avenue, Tool District, City - 110001', 40, 75)
-      .text('Phone: +91 98765 43210 | Email: billing@hardwarehub.com', 40, 88)
-      .text('GSTIN / Tax ID: 27AABCH1234F1Z9', 40, 101);
+      .text('Ruigola, Madhopara, Purnia - 854301', 40, 75)
+      .text('Phone: +91 84495 90494', 40, 88);
 
     // Invoice Title & Badge
     const isReturn = sale.status === 'returned' || (sale.refundAmount && sale.refundAmount > 0);
@@ -112,119 +111,119 @@ export class PdfService {
           .fill('#f8fafc');
       }
 
-        const qtyDisplay = (item.returnedQuantity && item.returnedQuantity > 0)
-          ? `${item.quantity} ${item.unit || 'pcs'} (-${item.returnedQuantity})`
-          : `${item.quantity} ${item.unit || 'pcs'}`;
-
-        doc
-          .fontSize(9)
-          .font('Helvetica')
-          .fillColor(primaryColor)
-          .text((index + 1).toString(), 50, currentY + 6)
-          .text(item.productName, 80, currentY + 6, { width: 175, lineBreak: false })
-          .fillColor(textGray)
-          .text(item.sku || '-', 260, currentY + 6)
-          .fillColor(primaryColor)
-          .text(qtyDisplay, 320, currentY + 6, { width: 65, align: 'center' })
-          .text(`Rs. ${item.unitPrice.toFixed(2)}`, 380, currentY + 6, { width: 75, align: 'right' })
-          .font('Helvetica-Bold')
-          .text(`Rs. ${item.subtotal.toFixed(2)}`, 465, currentY + 6, { width: 85, align: 'right' });
-
-        currentY += 22;
-      });
-
-      // Bottom border of table
-      doc
-        .moveTo(40, currentY + 2)
-        .lineTo(doc.page.width - 40, currentY + 2)
-        .strokeColor(borderGray)
-        .lineWidth(1)
-        .stroke();
-
-      // Notes and Summary Calculations
-      const summaryTop = currentY + 15;
-
-      // Notes Section on the left
-      if (sale.notes) {
-        doc
-          .fontSize(9)
-          .font('Helvetica-Bold')
-          .fillColor(textGray)
-          .text('NOTES / REMARKS:', 40, summaryTop)
-          .font('Helvetica')
-          .fontSize(8.5)
-          .fillColor(primaryColor)
-          .text(sale.notes, 40, summaryTop + 14, { width: 220 });
-      }
-
-      // Totals Box on the right
-      const summaryX = 330;
-      const summaryWidth = doc.page.width - 40 - summaryX;
-
-      doc
-        .rect(summaryX - 10, summaryTop - 5, summaryWidth + 10, 85)
-        .fill('#f8fafc')
-        .strokeColor(borderGray)
-        .lineWidth(0.5)
-        .stroke();
+      const qtyDisplay = (item.returnedQuantity && item.returnedQuantity > 0)
+        ? `${item.quantity} ${item.unit || 'pcs'} (-${item.returnedQuantity})`
+        : `${item.quantity} ${item.unit || 'pcs'}`;
 
       doc
         .fontSize(9)
         .font('Helvetica')
+        .fillColor(primaryColor)
+        .text((index + 1).toString(), 50, currentY + 6)
+        .text(item.productName, 80, currentY + 6, { width: 175, lineBreak: false })
         .fillColor(textGray)
-        .text('Subtotal:', summaryX, summaryTop + 4)
+        .text(item.sku || '-', 260, currentY + 6)
+        .fillColor(primaryColor)
+        .text(qtyDisplay, 320, currentY + 6, { width: 65, align: 'center' })
+        .text(`Rs. ${item.unitPrice.toFixed(2)}`, 380, currentY + 6, { width: 75, align: 'right' })
+        .font('Helvetica-Bold')
+        .text(`Rs. ${item.subtotal.toFixed(2)}`, 465, currentY + 6, { width: 85, align: 'right' });
+
+      currentY += 22;
+    });
+
+    // Bottom border of table
+    doc
+      .moveTo(40, currentY + 2)
+      .lineTo(doc.page.width - 40, currentY + 2)
+      .strokeColor(borderGray)
+      .lineWidth(1)
+      .stroke();
+
+    // Notes and Summary Calculations
+    const summaryTop = currentY + 15;
+
+    // Notes Section on the left
+    if (sale.notes) {
+      doc
+        .fontSize(9)
+        .font('Helvetica-Bold')
+        .fillColor(textGray)
+        .text('NOTES / REMARKS:', 40, summaryTop)
+        .font('Helvetica')
+        .fontSize(8.5)
+        .fillColor(primaryColor)
+        .text(sale.notes, 40, summaryTop + 14, { width: 220 });
+    }
+
+    // Totals Box on the right
+    const summaryX = 330;
+    const summaryWidth = doc.page.width - 40 - summaryX;
+
+    doc
+      .rect(summaryX - 10, summaryTop - 5, summaryWidth + 10, 85)
+      .fill('#f8fafc')
+      .strokeColor(borderGray)
+      .lineWidth(0.5)
+      .stroke();
+
+    doc
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor(textGray)
+      .text('Subtotal:', summaryX, summaryTop + 4)
+      .font('Helvetica-Bold')
+      .fillColor(primaryColor)
+      .text(`Rs. ${sale.subtotal.toFixed(2)}`, summaryX + 80, summaryTop + 4, { align: 'right', width: 130 });
+
+    if (sale.discountPercentage > 0) {
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor('#dc2626') // red for discount
+        .text(`Discount (${sale.discountPercentage}%):`, summaryX, summaryTop + 20)
+        .font('Helvetica-Bold')
+        .text(`-Rs. ${sale.discountAmount.toFixed(2)}`, summaryX + 80, summaryTop + 20, { align: 'right', width: 130 });
+    } else {
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor(textGray)
+        .text('Discount:', summaryX, summaryTop + 20)
+        .font('Helvetica')
+        .text('Rs. 0.00', summaryX + 80, summaryTop + 20, { align: 'right', width: 130 });
+    }
+
+    if (sale.taxAmount > 0) {
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor(textGray)
+        .text(`Tax (${sale.taxPercentage}%):`, summaryX, summaryTop + 36)
         .font('Helvetica-Bold')
         .fillColor(primaryColor)
-        .text(`Rs. ${sale.subtotal.toFixed(2)}`, summaryX + 80, summaryTop + 4, { align: 'right', width: 130 });
+        .text(`+Rs. ${sale.taxAmount.toFixed(2)}`, summaryX + 80, summaryTop + 36, { align: 'right', width: 130 });
+    }
 
-      if (sale.discountPercentage > 0) {
-        doc
-          .fontSize(9)
-          .font('Helvetica')
-          .fillColor('#dc2626') // red for discount
-          .text(`Discount (${sale.discountPercentage}%):`, summaryX, summaryTop + 20)
-          .font('Helvetica-Bold')
-          .text(`-Rs. ${sale.discountAmount.toFixed(2)}`, summaryX + 80, summaryTop + 20, { align: 'right', width: 130 });
-      } else {
-        doc
-          .fontSize(9)
-          .font('Helvetica')
-          .fillColor(textGray)
-          .text('Discount:', summaryX, summaryTop + 20)
-          .font('Helvetica')
-          .text('Rs. 0.00', summaryX + 80, summaryTop + 20, { align: 'right', width: 130 });
-      }
+    // Total Grand Highlight
+    doc
+      .rect(summaryX - 10, summaryTop + 54, summaryWidth + 10, 26)
+      .fill(primaryColor);
 
-      if (sale.taxAmount > 0) {
-        doc
-          .fontSize(9)
-          .font('Helvetica')
-          .fillColor(textGray)
-          .text(`Tax (${sale.taxPercentage}%):`, summaryX, summaryTop + 36)
-          .font('Helvetica-Bold')
-          .fillColor(primaryColor)
-          .text(`+Rs. ${sale.taxAmount.toFixed(2)}`, summaryX + 80, summaryTop + 36, { align: 'right', width: 130 });
-      }
+    doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor('#ffffff')
+      .text('GRAND TOTAL:', summaryX, summaryTop + 62)
+      .text(`Rs. ${sale.grandTotal.toFixed(2)}`, summaryX + 80, summaryTop + 62, { align: 'right', width: 130 });
 
-      // Total Grand Highlight
+    if (sale.refundAmount && sale.refundAmount > 0) {
       doc
-        .rect(summaryX - 10, summaryTop + 54, summaryWidth + 10, 26)
-        .fill(primaryColor);
-
-      doc
-        .fontSize(10)
+        .fontSize(9)
         .font('Helvetica-Bold')
-        .fillColor('#ffffff')
-        .text('GRAND TOTAL:', summaryX, summaryTop + 62)
-        .text(`Rs. ${sale.grandTotal.toFixed(2)}`, summaryX + 80, summaryTop + 62, { align: 'right', width: 130 });
-
-      if (sale.refundAmount && sale.refundAmount > 0) {
-        doc
-          .fontSize(9)
-          .font('Helvetica-Bold')
-          .fillColor('#16a34a')
-          .text(`REFUND PAID: -Rs. ${sale.refundAmount.toFixed(2)}`, summaryX - 10, summaryTop + 85, { width: summaryWidth + 10, align: 'right' });
-      }
+        .fillColor('#16a34a')
+        .text(`REFUND PAID: -Rs. ${sale.refundAmount.toFixed(2)}`, summaryX - 10, summaryTop + 85, { width: summaryWidth + 10, align: 'right' });
+    }
 
     // Footer Terms & Conditions
     const footerY = 730;

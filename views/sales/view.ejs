@@ -17,8 +17,7 @@
       <i class="fas fa-print"></i> Print Bill
     </button>
 
-    <!-- CRITICAL USER REQUIREMENT:
-         "after that I want to generate a pdf for the bill" -->
+    <!-- Download PDF Invoice -->
     <a href="/sales/<%= sale._id %>/pdf" class="btn btn-primary" download>
       <i class="fas fa-file-pdf"></i> Download PDF Invoice
     </a>
@@ -42,8 +41,8 @@
       </div>
       <div style="font-size: 13px; color: var(--text-dim); line-height: 1.5;">
         <div>Industrial Tools, Electrical & Plumbing Supplies</div>
-        <div>124 Industrial Avenue, Tool District, City - 110001</div>
-        <div>Phone: +91 98765 43210 | GSTIN: 27AABCH1234F1Z9</div>
+        <div>Ruigola, Madhopara, Purnia - 854301</div>
+        <div>Phone: +91 84495 90494</div>
       </div>
     </div>
 
@@ -61,9 +60,7 @@
       <span style="display: inline-block; background: var(--primary); color: #fff; font-weight: 700; font-size: 12px; padding: 4px 12px; border-radius: 4px; text-transform: uppercase; margin-bottom: 8px;">
         Tax Invoice
       </span>
-      <div style="font-size: 16px; font-weight: 800; color: var(--primary);">
-        <%= sale.invoiceNumber %>
-      </div>
+      <div style="font-size: 16px; font-weight: 800; color: var(--primary);"><%= sale.invoiceNumber %></div>
       <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">
         Date: <%= new Date(sale.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
       </div>
@@ -75,9 +72,7 @@
 
   <!-- Customer Details Block -->
   <div class="invoice-customer-card">
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">
-      Customer Information
-    </div>
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Customer Information</div>
     <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <div>
         <div class="invoice-customer-name" style="font-size: 15px; font-weight: 700; color: var(--text-main);"><%= sale.customerName %></div>
@@ -114,9 +109,7 @@
           <td style="text-align: center; font-weight: 700; color: var(--text-main);">
             <%= item.quantity %> <%= item.unit %>
             <% if (item.returnedQuantity && item.returnedQuantity > 0) { %>
-              <div style="font-size: 11px; color: #dc2626; font-weight: 600;">
-                (<%= item.returnedQuantity %> returned)
-              </div>
+              <div style="font-size: 11px; color: #dc2626; font-weight: 600;">(<%= item.returnedQuantity %> returned)</div>
             <% } %>
           </td>
           <td style="text-align: right; color: var(--text-muted);">₹<%= item.unitPrice.toFixed(2) %></td>
