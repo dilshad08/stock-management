@@ -5,6 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { NotFoundFilter } from './common/filters/not-found.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -18,9 +19,19 @@ async function bootstrap() {
   // Serve static files from /public
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
+  // Serve favicon directly for standard browser /favicon.ico requests
+  app.use('/favicon.ico', (req: any, res: any) => {
+    res.sendFile(join(__dirname, '..', 'public', 'favicon.svg'), {
+      headers: { 'Content-Type': 'image/svg+xml' },
+    });
+  });
+
   // Configure EJS view engine and views directory
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
+
+  // Register global 404 Page Not Found exception filter
+  app.useGlobalFilters(new NotFoundFilter());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

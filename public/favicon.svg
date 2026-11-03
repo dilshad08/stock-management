@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="faviconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#faviconGrad)" />
+
+  <!-- Hardware Tools: Crossed Hammer and Wrench -->
+  <g filter="url(#shadow)" fill="#ffffff">
+    <!-- Wrench -->
+    <path d="M47.2 14.8c-2.4-2.4-6.1-2.6-8.8-0.7l4.3 4.3-3.2 3.2-4.3-4.3c-1.9 2.7-1.7 6.4 0.7 8.8l12 12c1.2 1.2 3.1 1.2 4.2 0l7.1-7.1c1.2-1.2 1.2-3.1 0-4.2l-12-12zm-28 28l-5.6 5.6c-1.6 1.6-1.6 4.1 0 5.7 1.6 1.6 4.1 1.6 5.7 0l5.6-5.6-5.7-5.7z" opacity="0.95" />
+    
+    <!-- Hammer -->
+    <path d="M16.8 14.8c1.2-1.2 3.1-1.2 4.2 0l3.5 3.5 2.1-2.1c0.8-0.8 2.1-0.8 2.8 0l2.8 2.8c0.8 0.8 0.8 2.1 0 2.8l-2.1 2.1 3.5 3.5c1.2 1.2 1.2 3.1 0 4.2l-1.4 1.4-8.5-8.5 1.4-1.4c-0.8-0.8-0.8-2.1 0-2.8l-1.4-1.4-4.2 4.2-2.7-8.3z" opacity="0.9" />
+
+    <!-- Hammer Handle & Wrench Bar crossing -->
+    <path d="M21 27l22 22c1.2 1.2 3.1 1.2 4.2 0l1.4-1.4c1.2-1.2 1.2-3.1 0-4.2L26.6 21.4 21 27z" fill="#f8fafc" />
+    <path d="M27 21l22 22-5.6 5.6L21.4 26.6 27 21z" opacity="0.15" fill="#000000" />
+    <path d="M43 43l-22-22c-1.2-1.2-3.1-1.2-4.2 0l-1.4 1.4c-1.2 1.2-1.2 3.1 0 4.2l22 22c1.2 1.2 3.1 1.2 4.2 0l1.4-1.4c1.2-1.2 1.2-3.1 0-4.2z" fill="#ffffff" />
+  </g>
+
+  <!-- Central Gear / Nut accent -->
+  <circle cx="32" cy="32" r="5" fill="#ffffff" />
+  <circle cx="32" cy="32" r="2.5" fill="#4f46e5" />
+</svg>
+

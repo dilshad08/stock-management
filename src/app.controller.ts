@@ -48,4 +48,16 @@ export class AppController {
       lowStockAlerts: lowStockAlerts.slice(0, 8),
     };
   }
+
+  @Get('404')
+  @Render('404')
+  getNotFoundPage(@Res({ passthrough: true }) res: Response) {
+    res.status(404);
+    return {
+      title: '404 - Page Not Found',
+      currentPage: '404',
+      requestedUrl: '/404',
+      shopName: process.env.SHOP_NAME || 'HARDWARE HUB',
+    };
+  }
 }

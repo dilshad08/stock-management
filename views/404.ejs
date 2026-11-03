@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found | <%= typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB' %></title>
+
+  <!-- Favicon / Browser Icon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom CSS Design System -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .not-found-wrapper {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      background: radial-gradient(circle at 15% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 85%, rgba(2, 132, 199, 0.08) 0%, transparent 45%),
+                  var(--bg-body);
+    }
+
+    .not-found-card {
+      width: 100%;
+      max-width: 580px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.09), 0 0 1px 1px rgba(15, 23, 42, 0.02);
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .not-found-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #dc2626, #f59e0b, #4f46e5);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .not-found-badge-container {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+
+    .not-found-icon-circle {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: #fef2f2;
+      border: 2px dashed #fca5a5;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.12);
+      animation: toolWiggle 3s ease-in-out infinite;
+    }
+
+    @keyframes toolWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-8deg); }
+      40% { transform: rotate(8deg); }
+      60% { transform: rotate(-4deg); }
+      80% { transform: rotate(4deg); }
+    }
+
+    .not-found-title-glitch {
+      font-size: 64px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #0f172a 40%, #64748b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .not-found-heading {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .not-found-description {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 440px;
+      margin: 0 auto 24px;
+    }
+
+    .requested-url-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 32px;
+    }
+
+    .requested-url-box i {
+      color: #dc2626;
+      font-size: 13px;
+    }
+
+    .not-found-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .not-found-footer {
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .shop-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+  <div class="not-found-wrapper">
+    <div class="not-found-card">
+      <div class="not-found-badge-container">
+        <div class="not-found-icon-circle">
+          <i class="fas fa-screwdriver-wrench"></i>
+        </div>
+      </div>
+
+      <div class="not-found-title-glitch">404</div>
+      <h1 class="not-found-heading">Page Not Found</h1>
+
+      <p class="not-found-description">
+        We searched high and low in the warehouse, but the tool or page you are looking for does not exist or has been relocated.
+      </p>
+
+      <% if (typeof requestedUrl !== 'undefined' && requestedUrl) { %>
+        <div class="requested-url-box" title="<%= requestedUrl %>">
+          <i class="fas fa-triangle-exclamation"></i>
+          <span>Missing URL: <strong><%= requestedUrl %></strong></span>
+        </div>
+      <% } %>
+
+      <div class="not-found-actions">
+        <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+          <a href="/dashboard" class="btn btn-primary" style="padding: 10px 20px;">
+            <i class="fas fa-th-large"></i> Dashboard
+          </a>
+          <a href="/products" class="btn btn-outline" style="padding: 10px 18px;">
+            <i class="fas fa-boxes-stacked"></i> Products
+          </a>
+          <a href="/sales/new" class="btn btn-outline" style="padding: 10px 18px;">
+            <i class="fas fa-cash-register"></i> New Sale
+          </a>
+        <% } else { %>
+          <a href="/login" class="btn btn-primary" style="padding: 10px 24px;">
+            <i class="fas fa-arrow-right-to-bracket"></i> Sign In to Portal
+          </a>
+        <% } %>
+
+        <button type="button" onclick="window.history.back()" class="btn btn-outline" style="padding: 10px 18px;">
+          <i class="fas fa-arrow-left"></i> Go Back
+        </button>
+      </div>
+
+      <div class="not-found-footer">
+        <div class="shop-brand">
+          <i class="fas fa-tools" style="color: var(--primary);"></i>
+          <span><%= typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB' %></span>
+        </div>
+        <div>
+          <span>Error Code: 404_NOT_FOUND</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
