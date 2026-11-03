@@ -62,7 +62,7 @@
       </span>
       <div style="font-size: 16px; font-weight: 800; color: var(--primary);"><%= sale.invoiceNumber %></div>
       <div style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">
-        Date: <%= new Date(sale.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+        Date: <%= new Date(sale.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %>
       </div>
       <div style="font-size: 13px; color: var(--text-dim);">
         Payment: <strong style="color: var(--text-main);"><%= sale.paymentMethod %></strong>

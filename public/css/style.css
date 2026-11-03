@@ -404,7 +404,6 @@ body.sidebar-open {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 14px;
 }
-}
 
 /* Content Container */
 .content-body {
