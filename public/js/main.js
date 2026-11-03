@@ -1,10 +1,53 @@
 // Hardware Shop Admin Panel - Client Interactions
 
 document.addEventListener('DOMContentLoaded', () => {
+  initMobileSidebar();
   initPosBilling();
   initRestockModal();
   initAutoDismissAlerts();
 });
+
+// Mobile Responsive Sidebar Navigation
+function initMobileSidebar() {
+  const toggleBtn = document.getElementById('sidebarToggleBtn');
+  const closeBtn = document.getElementById('sidebarCloseBtn');
+  const overlay = document.getElementById('sidebarOverlay');
+  const sidebar = document.querySelector('.app-sidebar');
+
+  if (!sidebar) return;
+
+  function openSidebar() {
+    sidebar.classList.add('mobile-open');
+    if (overlay) overlay.classList.add('active');
+    document.body.classList.add('sidebar-open');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('mobile-open');
+    if (overlay) overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+      closeSidebar();
+    }
+  });
+
+  // Auto close on navigation in mobile/tablet
+  sidebar.querySelectorAll('.nav-item').forEach((link) => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 1024) {
+        closeSidebar();
+      }
+    });
+  });
+}
 
 // POS Billing & Sell Logic
 function initPosBilling() {

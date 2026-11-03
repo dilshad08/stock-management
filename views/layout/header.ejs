@@ -30,6 +30,9 @@
           <span class="logo-title"><%= typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB' %></span>
           <span class="logo-subtitle">Admin & Billing</span>
         </div>
+        <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close Sidebar">
+          <i class="fas fa-xmark"></i>
+        </button>
       </div>
 
       <nav class="sidebar-nav">
@@ -97,41 +100,50 @@
       </div>
     </aside>
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Main Content -->
     <main class="app-main">
       <!-- Top Sticky Header -->
       <header class="app-header">
         <div class="header-left">
+          <button type="button" class="mobile-sidebar-toggle" id="sidebarToggleBtn" aria-label="Open Navigation Menu">
+            <i class="fas fa-bars"></i>
+          </button>
+
           <h1 class="page-title">
             <%= typeof title !== 'undefined' ? title : (typeof shopName !== 'undefined' ? shopName : 'HARDWARE HUB') %>
           </h1>
         </div>
 
         <div class="header-actions">
-          <div style="font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+          <div class="header-date">
             <i class="far fa-calendar-alt"></i>
             <span id="currentDateDisplay"><%= new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></span>
           </div>
 
-          <a href="/products/new" class="btn btn-outline btn-sm">
-            <i class="fas fa-plus"></i> Add Product
+          <a href="/products/new" class="btn btn-outline btn-sm header-action-btn" title="Add Product">
+            <i class="fas fa-plus"></i>
+            <span class="btn-label">Add Product</span>
           </a>
 
-          <a href="/sales/new" class="btn btn-primary btn-sm">
-            <i class="fas fa-cash-register"></i> Sell Product
+          <a href="/sales/new" class="btn btn-primary btn-sm header-action-btn" title="Sell Product">
+            <i class="fas fa-cash-register"></i>
+            <span class="btn-label">Sell Product</span>
           </a>
 
           <% if (typeof currentUser !== 'undefined' && currentUser) { %>
-            <div style="height: 24px; width: 1px; background: var(--border-color); margin: 0 4px;"></div>
+            <div class="header-divider"></div>
             
-            <div class="user-header-badge" style="display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; color: var(--text-main);">
-              <i class="fas fa-user-circle" style="color: var(--primary); font-size: 15px;"></i>
-              <span><%= currentUser.username %></span>
+            <div class="user-header-badge" title="Logged in as <%= currentUser.username %>">
+              <i class="fas fa-user-circle"></i>
+              <span class="user-name-text"><%= currentUser.username %></span>
             </div>
 
-            <a href="/logout" class="btn btn-outline btn-sm" title="Log Out" style="color: #dc2626; border-color: #fca5a5; display: inline-flex; align-items: center; gap: 5px;">
+            <a href="/logout" class="btn btn-outline btn-sm btn-logout" title="Log Out">
               <i class="fas fa-sign-out-alt"></i>
-              <span>Logout</span>
+              <span class="btn-label">Logout</span>
             </a>
           <% } %>
         </div>
